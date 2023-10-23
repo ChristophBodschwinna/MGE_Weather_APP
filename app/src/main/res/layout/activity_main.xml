@@ -37,6 +37,10 @@
             android:layout_height="60dp"
             android:text="Location"
             ></Button>
+        <ImageView
+            android:id="@+id/myImageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
     </LinearLayout>
 
 

@@ -1,5 +1,6 @@
 package ch.ost.weatherapp
 
+import java.util.Calendar
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
@@ -9,6 +10,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -28,6 +30,37 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var lat: Double=0.00
     private var lon:Double=0.00
+    val weatherCodeToPicture = mapOf(
+        0 to R.drawable.sunny,
+        1 to R.drawable.sunny,
+        2 to R.drawable.cloudy,
+        3 to R.drawable.overcast,
+        45 to R.drawable.fog,
+        48 to R.drawable.fog,
+        51 to R.drawable.sunny_rainning,
+        53 to R.drawable.light_rain,
+        55 to R.drawable.raining,
+        56 to R.drawable.sunny_rainning,
+        57 to R.drawable.light_rain,
+        61 to R.drawable.sunny_rainning,
+        63 to R.drawable.light_rain,
+        65 to R.drawable.raining,
+        66 to R.drawable.light_rain,
+        67 to R.drawable.raining,
+        71 to R.drawable.snow,
+        73 to R.drawable.snow,
+        75 to R.drawable.snow,
+        77 to R.drawable.snow,
+        80 to R.drawable.sunny_rainning,
+        81 to R.drawable.light_rain,
+        82 to R.drawable.raining,
+        85 to R.drawable.snow,
+        86 to R.drawable.snow,
+        95 to R.drawable.thunder,
+        96 to R.drawable.thunder,
+        99 to R.drawable.thunder
+    )
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,12 +70,11 @@ class MainActivity : AppCompatActivity() {
         val btnSearchLoc = findViewById<Button>(R.id.searchLocationButton)
         val inputText =findViewById<EditText>(R.id.City_input)
         btnSearchLoc.setOnClickListener{
-            getLocationFromName(inputText.getText().toString())
+            getLocationFromName(inputText.text.toString())
             Toast.makeText(this@MainActivity, "You clicked me.", Toast.LENGTH_SHORT).show()
         }
         btnCurLoc.setOnClickListener{
             getlocation()
-            getWeatherData(lat,lon)?.let { Log.e("test", it) }
             Toast.makeText(this@MainActivity, "You clicked me.", Toast.LENGTH_SHORT).show()
         }
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -51,13 +83,14 @@ class MainActivity : AppCompatActivity() {
     }
     private fun getWeatherData(lat: Double, lon:Double): String? {
         val queue = Volley.newRequestQueue(this)
-        val url="https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&hourly=temperature_2m&timezone=Europe%2FBerlin&forecast_days=1"
+        val url="https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,weathercode&hourly=temperature_2m&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FBerlin&forecast_days=1"
 // Request a string response from the provided URL.
         val stringRequest = StringRequest(Request.Method.GET, url,
             { response ->
                 // Display the first 500 characters of the response string.
                 val jsonResponse =JSONObject(response)
                 Log.d("resJSON",jsonResponse.getString("latitude"))
+                printWeatherData(jsonResponse)
                 Log.d("http","Response is: ${response.substring(0, 500)}")
             },
             { Log.e("error","That didn't work!")  })
@@ -95,14 +128,24 @@ class MainActivity : AppCompatActivity() {
                 else {
                     lat = location.latitude
                     lon = location.longitude
+                    getWeatherData(location.latitude,location.longitude)?.let { Log.e("test", it) }
+
                     Log.d("loc","$lat $lon")
                 }
 
             }
     }
-    fun printWeatherData(){
-
+    fun printWeatherData(jsonRes: JSONObject) {
+        // Get the current time
+        val calendar = Calendar.getInstance()
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        println("Current hour: $hour")
+        val imageView = findViewById<ImageView>(R.id.myImageView)
+        var weatherCode: Int = jsonRes.getJSONObject("current").getInt("weathercode")
+        weatherCodeToPicture[weatherCode]?.let { imageView.setImageResource(it) }
+        Log.d("testW","test")
     }
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun getLocationFromName(locName:String){
         val geocoder = Geocoder(this)
