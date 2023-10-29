@@ -18,29 +18,31 @@
         app:layout_constraintTop_toTopOf="parent" >
         <EditText
             android:id="@+id/City_input"
-            android:hint="City"
+            android:hint="@string/city"
             android:layout_height="wrap_content"
             android:inputType="text"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/linearLayout"  android:layout_width="match_parent"/>
+            app:layout_constraintTop_toTopOf="@+id/linearLayout"  android:layout_width="match_parent"
+            android:autofillHints="@string/city" />
         <Button
             android:id="@+id/searchLocationButton"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:text="Search Location"
-            ></Button>
+            android:text="@string/search_location"
+            />
         <Button
             android:id="@+id/currentLocationButton"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:text="Location"
-            ></Button>
+            android:text="@string/location"
+            />
         <ImageView
             android:id="@+id/myImageView"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/weatherpicture" />
     </LinearLayout>
 
 

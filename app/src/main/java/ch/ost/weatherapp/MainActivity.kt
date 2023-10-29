@@ -70,11 +70,13 @@ class MainActivity : AppCompatActivity() {
         val btnSearchLoc = findViewById<Button>(R.id.searchLocationButton)
         val inputText =findViewById<EditText>(R.id.City_input)
         btnSearchLoc.setOnClickListener{
-            getLocationFromName(inputText.text.toString())
+            if(inputText.text.toString().isNotEmpty()){
+                getLocationFromName(inputText.text.toString())
+            }
             Toast.makeText(this@MainActivity, "You clicked me.", Toast.LENGTH_SHORT).show()
         }
         btnCurLoc.setOnClickListener{
-            getlocation()
+            getLocation()
             Toast.makeText(this@MainActivity, "You clicked me.", Toast.LENGTH_SHORT).show()
         }
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -98,43 +100,50 @@ class MainActivity : AppCompatActivity() {
         queue.add(stringRequest)
         return "test"
     }
-    private fun getlocation(){
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
+private fun getLocation() {
+    if (ActivityCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED
+    ) {
+        // Request the missing permissions
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
                 android.Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
-        fusedLocationClient.getCurrentLocation( Priority.PRIORITY_HIGH_ACCURACY, object : CancellationToken() {
-            override fun onCanceledRequested(p0: OnTokenCanceledListener) = CancellationTokenSource().token
-            override fun isCancellationRequested() = false
-        })
-            .addOnSuccessListener { location: Location? ->
-                if (location == null){
-                    Toast.makeText(this, "Cannot get location.", Toast.LENGTH_SHORT).show()
-                    Log.d("noloc","Cannot get location")
-                }
-                else {
-                    lat = location.latitude
-                    lon = location.longitude
-                    getWeatherData(location.latitude,location.longitude)?.let { Log.e("test", it) }
-
-                    Log.d("loc","$lat $lon")
-                }
-
-            }
+            ),
+            PERMISSION_REQUEST_CODE
+        )
+        return
     }
+
+    // Rest of your code
+    fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, object : CancellationToken() {
+        override fun onCanceledRequested(p0: OnTokenCanceledListener) = CancellationTokenSource().token
+        override fun isCancellationRequested() = false
+    })
+        .addOnSuccessListener { location: Location? ->
+            if (location == null) {
+                Toast.makeText(this, "Cannot get location.", Toast.LENGTH_SHORT).show()
+                Log.d("noloc", "Cannot get location")
+            } else {
+                lat = location.latitude
+                lon = location.longitude
+                getWeatherData(location.latitude, location.longitude)?.let { Log.e("test", it) }
+
+                Log.d("loc", "$lat $lon")
+            }
+        }
+}
+
+    companion object {
+        private const val PERMISSION_REQUEST_CODE = 123 // You can use any code you prefer
+    }
+
     fun printWeatherData(jsonRes: JSONObject) {
         // Get the current time
         val calendar = Calendar.getInstance()
@@ -150,10 +159,12 @@ class MainActivity : AppCompatActivity() {
     fun getLocationFromName(locName:String){
         val geocoder = Geocoder(this)
         val geocodeListener = Geocoder.GeocodeListener { addresses ->
-            // do something with the addresses list
             val location: Address = addresses[0]
-            getWeatherData(location.latitude,location.longitude)?.let { Log.e("test", it) }
+            val inputText =findViewById<EditText>(R.id.City_input)
+            inputText.setText(location.getAddressLine(0))
             Log.d("list", addresses.toString())
+        //getWeatherData(location.latitude,location.longitude)?.let { Log.e("test", it) }
+
         }
         geocoder.getFromLocationName(locName,5,geocodeListener)
     }
