@@ -1,14 +1,12 @@
 package ch.ost.weatherapp
 
 import android.annotation.SuppressLint
-import java.util.Calendar
+import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
-import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -16,7 +14,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import ch.ost.weatherapp.data.MyWeatherStore
@@ -33,13 +31,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.util.Calendar
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
     private         val timeBeforeNewRequest = 3600000
     private val roundingValue ="%.2f"
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private var lat: Double=0.00
-    private var lon:Double=0.00
     private val permissionRequestCode = 123
     private val weatherCodeToPicture = mapOf(
         0 to R.drawable.sunny,
@@ -72,7 +70,6 @@ class MainActivity : AppCompatActivity() {
         99 to R.drawable.thunder
     )
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -84,11 +81,14 @@ class MainActivity : AppCompatActivity() {
             if(inputText.text.toString().isNotEmpty()){
                 getLocationFromName(inputText.text.toString())
             }
-            Toast.makeText(this@MainActivity, "You clicked me.", Toast.LENGTH_SHORT).show()
         }
         btnCurLoc.setOnClickListener{
             getLocation()
-            Toast.makeText(this@MainActivity, "You clicked me.", Toast.LENGTH_SHORT).show()
+        }
+        val languageSettingButton = findViewById<Button>(R.id.Language_Setting)
+        languageSettingButton.setOnClickListener {
+                    showLanguageSelectionDialog()
+
         }
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -115,7 +115,6 @@ class MainActivity : AppCompatActivity() {
             null
         }
     }
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private  fun getWeatherDataFromAPI(lat: Double, lon:Double){
         val queue = Volley.newRequestQueue(this)
         val url="https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,weathercode&hourly=temperature_2m&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FBerlin&forecast_days=1"
@@ -132,31 +131,24 @@ class MainActivity : AppCompatActivity() {
                 printWeatherData(jsonResponse)
             },
             {
-                Log.e("APIError","That didn't work!")
-                Toast.makeText(this, "Could not receive Data from Open-Meteo", Toast.LENGTH_SHORT).show()
+                val noResponse= getString(R.string.no_response_meteo)
+                Toast.makeText(this, noResponse, Toast.LENGTH_SHORT).show()
             })
         queue.add(stringRequest)
     }
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun getWeatherData(lat: Double, lon:Double) {
         val storageData = getStorageData()
         if (storageData==null){
-            Log.d("data","storage null")
             getWeatherDataFromAPI(lat,lon)
         }else{
             val (jsonObject, timestamp) = storageData
             if (System.currentTimeMillis()- timestamp!! <=timeBeforeNewRequest && jsonObject != null &&String.format(roundingValue,jsonObject.getString("latitude").toDouble())==String.format(roundingValue, lat).toDouble().toString() &&String.format(roundingValue,jsonObject.getString("longitude").toDouble())==String.format(roundingValue, lon).toDouble().toString())   {
                 printWeatherData(jsonObject)
             }else{
-                val time = System.currentTimeMillis()- timestamp
-                val lonR= String.format(roundingValue, lon)
-                val latR= String.format(roundingValue, lat)
-                Log.d("data","condition not met time: $time object: $jsonObject lat: $latR lon: $lonR")
                 getWeatherDataFromAPI(lat,lon)
             }
         }
     }
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 private fun getLocation() {
     if (ActivityCompat.checkSelfPermission(
             this,
@@ -185,42 +177,35 @@ private fun getLocation() {
     })
         .addOnSuccessListener { location: Location? ->
             if (location == null) {
-                Toast.makeText(this, "Cannot get location.", Toast.LENGTH_SHORT).show()
-                Log.d("noloc", "Cannot get location")
+                val noLocation = getString(R.string.no_location)
+                Toast.makeText(this, noLocation, Toast.LENGTH_SHORT).show()
             } else {
-                lat = location.latitude
-                lon = location.longitude
                 getWeatherData(location.latitude, location.longitude)
-                Log.d("loc", "$lat $lon")
             }
         }
 }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun getCityFromCoordinates(lat: Double, lon: Double){
-        Log.d("cord", "$lat $lon")
         val geocoder = Geocoder(this)
         val geocodeListener = Geocoder.GeocodeListener { addresses ->
             if (addresses.isEmpty()) {
-                Toast.makeText(this, "No City found", Toast.LENGTH_SHORT).show()
+                val noCity = getString(R.string.no_city_found)
+                Toast.makeText(this, noCity, Toast.LENGTH_SHORT).show()
                 val showCity = findViewById<TextView>(R.id.showCity)
-                showCity.text = "No City found"
+                showCity.text = noCity
             }else{
                 val location: Address = addresses[0]
                 val showCity = findViewById<TextView>(R.id.showCity)
                 showCity.text = location.getAddressLine(0)
-                Log.d("response", addresses.toString())
-
             }
         }
         geocoder.getFromLocation(lat,lon,5,geocodeListener)
     }
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    @SuppressLint("SetTextI18n")
     private fun printWeatherData(jsonRes: JSONObject) {
         // Get the current time
         val calendar = Calendar.getInstance()
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
-        println("Current hour: $hour")
         val imageView = findViewById<ImageView>(R.id.myImageView)
         val currentTempView = findViewById<TextView>(R.id.currentTemp)
         val maxTempView = findViewById<TextView>(R.id.maxTemp)
@@ -236,23 +221,101 @@ private fun getLocation() {
         weatherCodeToPicture[weatherCode]?.let { imageView.setImageResource(it) }
         val showTempLayout = findViewById<LinearLayout>(R.id.showTemp)
         showTempLayout.visibility = View.VISIBLE
-        Log.d("testW","test")
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    fun getLocationFromName(locName:String){
+    private fun getLocationFromName(locName:String){
         val geocoder = Geocoder(this)
         val geocodeListener = Geocoder.GeocodeListener { addresses ->
             if (addresses.isEmpty()) {
-                Toast.makeText(this, "No matching address found for $locName", Toast.LENGTH_LONG).show()
+                val noMatch = getString(R.string.no_match)
+                Toast.makeText(this, "$noMatch $locName", Toast.LENGTH_LONG).show()
             }else{
                 val location: Address = addresses[0]
                 val inputText =findViewById<EditText>(R.id.City_input)
                 inputText.setText(location.getAddressLine(0))
-                Log.d("list", addresses.toString())
                 getWeatherData(location.latitude,location.longitude)
             }
         }
         geocoder.getFromLocationName(locName,5,geocodeListener)
+    }
+//    private fun showLanguageSelectionDialog() {
+//        val dialogView = layoutInflater.inflate(R.layout.dialog_language_selection, null)
+//        val dialog = AlertDialog.Builder(this)
+//            .setTitle("Select Language")
+//            .setView(dialogView)
+//            .create()
+//        dialogView.findViewById<Button>(R.id.btnGerman).setOnClickListener {
+//            CoroutineScope(Dispatchers.IO).launch {
+//                setLocale("de")
+//            }
+//            recreate()
+//            dialog.dismiss()
+//        }
+//        dialogView.findViewById<Button>(R.id.btnEnglish).setOnClickListener {
+//            CoroutineScope(Dispatchers.IO).launch {
+//                setLocale("en")
+//            }
+//            recreate()
+//            dialog.dismiss()
+//        }
+//
+//        dialog.show()
+//    }
+//
+
+//    private suspend fun setLocale(languageCode: String) {
+//        val locale = Locale(languageCode)
+//        Locale.setDefault(locale)
+//        val configuration = resources.configuration
+//        configuration.setLocale(locale)
+//
+//        // Update the language setting in DataStore
+//        dataStore.edit { preferences ->
+//            preferences[PreferenceKeys.LANGUAGE] = languageCode
+//        }
+//
+//        // Recreate the activity with the new language configuration
+//        val newContext = createConfigurationContext(configuration)
+//        val intent = Intent(this, MainActivity::class.java)
+//        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+//        startActivity(intent)
+//        finish()
+//    }
+//
+//    object PreferenceKeys {
+//        val LANGUAGE = stringPreferencesKey("language")
+//    }
+
+
+    private fun showLanguageSelectionDialog() {
+        val changeLangText= getString(R.string.change_language)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_language_selection, null)
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(changeLangText)
+            .setView(dialogView)
+            .create()
+
+        dialogView.findViewById<Button>(R.id.btnGerman).setOnClickListener {
+            setLocale("de")
+            recreate()
+            dialog.dismiss()
+        }
+        dialogView.findViewById<Button>(R.id.btnEnglish).setOnClickListener {
+            setLocale("en")
+            recreate()
+            dialog.dismiss()
+        }
+        dialog.show()
+    }
+    private fun setLocale(languageCode: String) {
+        val locale = Locale(languageCode)
+        Locale.setDefault(locale)
+        val resources = resources
+        val configuration = resources.configuration
+        configuration.setLocale(locale)
+        resources.updateConfiguration(configuration, resources.displayMetrics)
+        val editor = getSharedPreferences("settings", Context.MODE_PRIVATE).edit()
+        editor.putString("language", languageCode)
+        editor.apply()
     }
 }

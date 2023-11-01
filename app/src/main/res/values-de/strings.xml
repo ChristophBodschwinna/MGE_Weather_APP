@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Wetterapp</string>
+    <string name="city">Stadt</string>
+    <string name="location">Standort</string>
+    <string name="search_location">Standort suchen</string>
+    <string name="weatherpicture">Wetterbild</string>
+    <string name="max_temp">Max Temp:</string>
+    <string name="min_temp">Min Temp:</string>
+    <string name="no_city_found">Keine Stadt gefunden</string>
+    <string name="no_location">Der Standort kann nicht ermittelt werden</string>
+    <string name="no_match">Keine passende Adresse gefunden für</string>
+    <string name="no_response_meteo">Es konnten keine Daten von Open-Meteo empfangen werden</string>
+    <string name="change_language">Sprache ändern</string>
+    <string name="german">Deutsch</string>
+    <string name="english">Englisch</string>
+</resources>

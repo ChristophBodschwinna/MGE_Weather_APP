@@ -11,22 +11,22 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 class MyWeatherStore(context: Context)  {
     private val dataStore = context.dataStore
-    private val JSON_OBJECT_KEY = stringPreferencesKey("weather_string")
-    private val TIMESTAMP_KEY = longPreferencesKey("timestamp")
+    private val jsonKey = stringPreferencesKey("weather_string")
+    private val timeKey = longPreferencesKey("timestamp")
 
     suspend fun saveJsonObject(jsonObject:String) {
         dataStore.edit { preferences: MutablePreferences ->
-            preferences[JSON_OBJECT_KEY] = jsonObject
-            preferences[TIMESTAMP_KEY] = System.currentTimeMillis()
+            preferences[jsonKey] = jsonObject
+            preferences[timeKey] = System.currentTimeMillis()
         }
-        val storedJsonObject = dataStore.data.first()[JSON_OBJECT_KEY]
-        val storedTimestamp = dataStore.data.first()[TIMESTAMP_KEY]
+        val storedJsonObject = dataStore.data.first()[jsonKey]
+        val storedTimestamp = dataStore.data.first()[timeKey]
         Log.d("storageData", "Saved JSON object: $storedJsonObject, Timestamp: $storedTimestamp")
 
     }
 
     suspend fun getJsonObjectWithTimestamp(): Pair<String?, Long?> {
-        return Pair(dataStore.data.first()[JSON_OBJECT_KEY],dataStore.data.first()[TIMESTAMP_KEY])
+        return Pair(dataStore.data.first()[jsonKey],dataStore.data.first()[timeKey])
     }
 
 }
