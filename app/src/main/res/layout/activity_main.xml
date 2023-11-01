@@ -14,35 +14,85 @@
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" >
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
+
         <EditText
             android:id="@+id/City_input"
+            android:layout_width="match_parent"
+            android:layout_height="62dp"
+            android:autofillHints="@string/city"
             android:hint="@string/city"
-            android:layout_height="wrap_content"
             android:inputType="text"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/linearLayout"  android:layout_width="match_parent"
-            android:autofillHints="@string/city" />
+            app:layout_constraintTop_toTopOf="@+id/linearLayout" />
+
         <Button
             android:id="@+id/searchLocationButton"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:text="@string/search_location"
-            />
+            android:text="@string/search_location" />
+
         <Button
             android:id="@+id/currentLocationButton"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:text="@string/location"
-            />
+            android:text="@string/location" />
+
         <ImageView
             android:id="@+id/myImageView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/weatherpicture" />
+        <TextView
+            android:id="@+id/showCity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"/>
+        <TextView
+            android:id="@+id/currentTemp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp" />
+        <LinearLayout
+            android:id="@+id/showTemp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:visibility="invisible">
+            <TextView
+                android:id="@+id/maxTempLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/max_temp"
+                android:textSize="18sp" />
+            <TextView
+                android:id="@+id/maxTemp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                 />
+            <TextView
+                android:layout_marginStart="10dp"
+                android:id="@+id/minTempLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/min_temp"
+                android:textSize="18sp" />
+            <TextView
+                android:id="@+id/minTemp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+
+
     </LinearLayout>
 
 

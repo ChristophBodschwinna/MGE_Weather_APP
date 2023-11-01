@@ -4,4 +4,6 @@
     <string name="location">Location</string>
     <string name="search_location">Search Location</string>
     <string name="weatherpicture">WeatherPicture</string>
+    <string name="max_temp">Max Temp:</string>
+    <string name="min_temp">Min Temp:</string>
 </resources>
