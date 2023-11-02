@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Wetterapp</string>
     <string name="city">Stadt</string>
-    <string name="location">Standort</string>
+    <string name="location">Aktueller Standort</string>
     <string name="search_location">Standort suchen</string>
     <string name="weatherpicture">Wetterbild</string>
     <string name="max_temp">Max Temp:</string>

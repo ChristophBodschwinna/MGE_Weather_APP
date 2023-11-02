@@ -6,12 +6,13 @@ import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
-import android.os.Bundle
+import android.os.Bundle import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -73,16 +74,17 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         val btnCurLoc = findViewById<Button>(R.id.currentLocationButton)
         val btnSearchLoc = findViewById<Button>(R.id.searchLocationButton)
         val inputText =findViewById<EditText>(R.id.City_input)
         btnSearchLoc.setOnClickListener{
             if(inputText.text.toString().isNotEmpty()){
+                activateLoading()
                 getLocationFromName(inputText.text.toString())
             }
         }
         btnCurLoc.setOnClickListener{
+            activateLoading()
             getLocation()
         }
         val languageSettingButton = findViewById<Button>(R.id.Language_Setting)
@@ -91,8 +93,14 @@ class MainActivity : AppCompatActivity() {
 
         }
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-
+    }
+    private fun activateLoading(){
+        val loadingView = findViewById<ProgressBar>(R.id.loading_view)
+        loadingView.visibility=View.VISIBLE
+    }
+    private fun deactivateLoading(){
+        val loadingView = findViewById<ProgressBar>(R.id.loading_view)
+        loadingView.visibility=View.GONE
     }
     private fun getStorageData(): Pair<JSONObject?, Long?>? {
         var dataLocal =""
@@ -118,7 +126,6 @@ class MainActivity : AppCompatActivity() {
     private  fun getWeatherDataFromAPI(lat: Double, lon:Double){
         val queue = Volley.newRequestQueue(this)
         val url="https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,weathercode&hourly=temperature_2m&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FBerlin&forecast_days=1"
-        // Request a string response from the provided URL.
         val stringRequest = StringRequest(Request.Method.GET, url,
             { response ->
                 val jsonResponse =JSONObject(response)
@@ -158,7 +165,6 @@ private fun getLocation() {
             android.Manifest.permission.ACCESS_COARSE_LOCATION
         ) != PackageManager.PERMISSION_GRANTED
     ) {
-        // Request the missing permissions
         ActivityCompat.requestPermissions(
             this,
             arrayOf(
@@ -170,7 +176,6 @@ private fun getLocation() {
         return
     }
 
-    // Rest of your code
     fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, object : CancellationToken() {
         override fun onCanceledRequested(p0: OnTokenCanceledListener) = CancellationTokenSource().token
         override fun isCancellationRequested() = false
@@ -203,7 +208,6 @@ private fun getLocation() {
     }
     @SuppressLint("SetTextI18n")
     private fun printWeatherData(jsonRes: JSONObject) {
-        // Get the current time
         val calendar = Calendar.getInstance()
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
         val imageView = findViewById<ImageView>(R.id.myImageView)
@@ -220,6 +224,7 @@ private fun getLocation() {
         getCityFromCoordinates(jsonRes.getString("latitude").toDouble(), jsonRes.getString("longitude").toDouble())
         weatherCodeToPicture[weatherCode]?.let { imageView.setImageResource(it) }
         val showTempLayout = findViewById<LinearLayout>(R.id.showTemp)
+        deactivateLoading()
         showTempLayout.visibility = View.VISIBLE
     }
 
@@ -231,61 +236,11 @@ private fun getLocation() {
                 Toast.makeText(this, "$noMatch $locName", Toast.LENGTH_LONG).show()
             }else{
                 val location: Address = addresses[0]
-                val inputText =findViewById<EditText>(R.id.City_input)
-                inputText.setText(location.getAddressLine(0))
                 getWeatherData(location.latitude,location.longitude)
             }
         }
         geocoder.getFromLocationName(locName,5,geocodeListener)
     }
-//    private fun showLanguageSelectionDialog() {
-//        val dialogView = layoutInflater.inflate(R.layout.dialog_language_selection, null)
-//        val dialog = AlertDialog.Builder(this)
-//            .setTitle("Select Language")
-//            .setView(dialogView)
-//            .create()
-//        dialogView.findViewById<Button>(R.id.btnGerman).setOnClickListener {
-//            CoroutineScope(Dispatchers.IO).launch {
-//                setLocale("de")
-//            }
-//            recreate()
-//            dialog.dismiss()
-//        }
-//        dialogView.findViewById<Button>(R.id.btnEnglish).setOnClickListener {
-//            CoroutineScope(Dispatchers.IO).launch {
-//                setLocale("en")
-//            }
-//            recreate()
-//            dialog.dismiss()
-//        }
-//
-//        dialog.show()
-//    }
-//
-
-//    private suspend fun setLocale(languageCode: String) {
-//        val locale = Locale(languageCode)
-//        Locale.setDefault(locale)
-//        val configuration = resources.configuration
-//        configuration.setLocale(locale)
-//
-//        // Update the language setting in DataStore
-//        dataStore.edit { preferences ->
-//            preferences[PreferenceKeys.LANGUAGE] = languageCode
-//        }
-//
-//        // Recreate the activity with the new language configuration
-//        val newContext = createConfigurationContext(configuration)
-//        val intent = Intent(this, MainActivity::class.java)
-//        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-//        startActivity(intent)
-//        finish()
-//    }
-//
-//    object PreferenceKeys {
-//        val LANGUAGE = stringPreferencesKey("language")
-//    }
-
 
     private fun showLanguageSelectionDialog() {
         val changeLangText= getString(R.string.change_language)
