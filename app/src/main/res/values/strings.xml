@@ -14,4 +14,16 @@
     <string name="change_language">Change Language</string>
     <string name="german">German</string>
     <string name="english">English</string>
+    <string name="please_fill_field">Please enter a city</string>
+    <string name="humidityLabel">Humidity:</string>
+    <string name="windLabel">Wind speed:</string>
+    <string name="north">N</string>
+    <string name="north_east">NE</string>
+    <string name="east">E</string>
+    <string name="south_east">SE</string>
+    <string name="south">S</string>
+    <string name="south_west">SW</string>
+    <string name="west">W</string>
+    <string name="north_west">NW</string>
+
 </resources>

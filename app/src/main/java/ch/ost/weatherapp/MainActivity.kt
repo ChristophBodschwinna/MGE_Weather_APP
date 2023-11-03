@@ -81,6 +81,9 @@ class MainActivity : AppCompatActivity() {
             if(inputText.text.toString().isNotEmpty()){
                 activateLoading()
                 getLocationFromName(inputText.text.toString())
+            }else{
+                val enterCity= getString(R.string.please_fill_field)
+                Toast.makeText(this, enterCity, Toast.LENGTH_SHORT).show()
             }
         }
         btnCurLoc.setOnClickListener{
@@ -125,7 +128,7 @@ class MainActivity : AppCompatActivity() {
     }
     private  fun getWeatherDataFromAPI(lat: Double, lon:Double){
         val queue = Volley.newRequestQueue(this)
-        val url="https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,weathercode&hourly=temperature_2m&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FBerlin&forecast_days=1"
+        val url= "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&hourly=temperature_2m,relativehumidity_2m,weathercode,windspeed_10m,winddirection_10m&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FBerlin&forecast_days=1"
         val stringRequest = StringRequest(Request.Method.GET, url,
             { response ->
                 val jsonResponse =JSONObject(response)
@@ -149,7 +152,12 @@ class MainActivity : AppCompatActivity() {
             getWeatherDataFromAPI(lat,lon)
         }else{
             val (jsonObject, timestamp) = storageData
-            if (System.currentTimeMillis()- timestamp!! <=timeBeforeNewRequest && jsonObject != null &&String.format(roundingValue,jsonObject.getString("latitude").toDouble())==String.format(roundingValue, lat).toDouble().toString() &&String.format(roundingValue,jsonObject.getString("longitude").toDouble())==String.format(roundingValue, lon).toDouble().toString())   {
+            Log.d("value", jsonObject.toString())
+            Log.d("value", timestamp.toString())
+            if (System.currentTimeMillis()- timestamp!! <=timeBeforeNewRequest &&
+                jsonObject != null &&
+                String.format(roundingValue,jsonObject.getDouble("latitude"))==String.format(roundingValue, lat) &&
+                String.format(roundingValue,jsonObject.getDouble("longitude"))==String.format(roundingValue, lon))   {
                 printWeatherData(jsonObject)
             }else{
                 getWeatherDataFromAPI(lat,lon)
@@ -189,22 +197,29 @@ private fun getLocation() {
             }
         }
 }
-
     private fun getCityFromCoordinates(lat: Double, lon: Double){
         val geocoder = Geocoder(this)
         val geocodeListener = Geocoder.GeocodeListener { addresses ->
-            if (addresses.isEmpty()) {
-                val noCity = getString(R.string.no_city_found)
-                Toast.makeText(this, noCity, Toast.LENGTH_SHORT).show()
-                val showCity = findViewById<TextView>(R.id.showCity)
-                showCity.text = noCity
-            }else{
-                val location: Address = addresses[0]
-                val showCity = findViewById<TextView>(R.id.showCity)
-                showCity.text = location.getAddressLine(0)
+            runOnUiThread {
+                if (addresses.isEmpty()) {
+                    val noCity = getString(R.string.no_city_found)
+                    Toast.makeText(this, noCity, Toast.LENGTH_SHORT).show()
+                    val showCity = findViewById<TextView>(R.id.showCity)
+                    showCity.text = noCity
+                } else {
+                    val location: Address = addresses[0]
+                    val showCity = findViewById<TextView>(R.id.showCity)
+                    Log.d("city", location.getAddressLine(0))
+                    showCity.text = location.getAddressLine(0)
+                }
             }
         }
-        geocoder.getFromLocation(lat,lon,5,geocodeListener)
+        geocoder.getFromLocation(lat, lon, 5, geocodeListener)
+    }
+    private fun degreeToDirection(degree: Int): String {
+        val directions = listOf(R.string.north, R.string.north_east, R.string.east, R.string.south_east, R.string.south, R.string.south_west, R.string.west, R.string.north_west)
+        val index = ((degree % 360 + 360) % 360 / 45)
+        return getString(directions[index])
     }
     @SuppressLint("SetTextI18n")
     private fun printWeatherData(jsonRes: JSONObject) {
@@ -214,18 +229,28 @@ private fun getLocation() {
         val currentTempView = findViewById<TextView>(R.id.currentTemp)
         val maxTempView = findViewById<TextView>(R.id.maxTemp)
         val minTempView = findViewById<TextView>(R.id.minTemp)
+        val windSpeedView= findViewById<TextView>(R.id.wind)
+        val humidityView= findViewById<TextView>(R.id.humidity)
+        val curHumidity = jsonRes.getJSONObject("hourly").getJSONArray("relativehumidity_2m").getInt(hour)
+        val curWindSpeed = jsonRes.getJSONObject("hourly").getJSONArray("windspeed_10m").getDouble(hour)
         val currentTemp = jsonRes.getJSONObject("hourly").getJSONArray("temperature_2m").getDouble(hour)
         val maxTemp = jsonRes.getJSONObject("daily").getJSONArray("temperature_2m_max").getDouble(0)
         val minTemp = jsonRes.getJSONObject("daily").getJSONArray("temperature_2m_min").getDouble(0)
+        val windDegree=jsonRes.getJSONObject("hourly").getJSONArray("winddirection_10m").getInt(hour)
+        val windDirection= degreeToDirection(windDegree)
         currentTempView.text= "$currentTemp C"
         maxTempView.text = "$maxTemp C"
         minTempView.text = "$minTemp C"
-        val weatherCode: Int = jsonRes.getJSONObject("current").getInt("weathercode")
+        windSpeedView.text="$curWindSpeed km/h $windDirection"
+        humidityView.text="$curHumidity %"
+        val weatherCode: Int = jsonRes.getJSONObject("hourly").getJSONArray("weathercode").getInt(0)
         getCityFromCoordinates(jsonRes.getString("latitude").toDouble(), jsonRes.getString("longitude").toDouble())
         weatherCodeToPicture[weatherCode]?.let { imageView.setImageResource(it) }
-        val showTempLayout = findViewById<LinearLayout>(R.id.showTemp)
         deactivateLoading()
+        val showExtras= findViewById<LinearLayout>(R.id.showExtra)
+        val showTempLayout = findViewById<LinearLayout>(R.id.showTemp)
         showTempLayout.visibility = View.VISIBLE
+        showExtras.visibility = View.VISIBLE
     }
 
     private fun getLocationFromName(locName:String){
