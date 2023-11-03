@@ -6,7 +6,7 @@ import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
-import android.os.Bundle import android.util.Log
+import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -36,7 +36,7 @@ import java.util.Calendar
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
-    private         val timeBeforeNewRequest = 3600000
+    private val timeBeforeNewRequest = 3600000
     private val roundingValue ="%.2f"
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val permissionRequestCode = 123
@@ -152,8 +152,6 @@ class MainActivity : AppCompatActivity() {
             getWeatherDataFromAPI(lat,lon)
         }else{
             val (jsonObject, timestamp) = storageData
-            Log.d("value", jsonObject.toString())
-            Log.d("value", timestamp.toString())
             if (System.currentTimeMillis()- timestamp!! <=timeBeforeNewRequest &&
                 jsonObject != null &&
                 String.format(roundingValue,jsonObject.getDouble("latitude"))==String.format(roundingValue, lat) &&
@@ -164,15 +162,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-private fun getLocation() {
-    if (ActivityCompat.checkSelfPermission(
-            this,
-            android.Manifest.permission.ACCESS_FINE_LOCATION
-        ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-            this,
-            android.Manifest.permission.ACCESS_COARSE_LOCATION
-        ) != PackageManager.PERMISSION_GRANTED
-    ) {
+    private fun requestPermission(){
         ActivityCompat.requestPermissions(
             this,
             arrayOf(
@@ -181,6 +171,24 @@ private fun getLocation() {
             ),
             permissionRequestCode
         )
+    }
+    private fun checkPermission(): Boolean {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return false
+        }
+        return true
+    }
+private fun getLocation() {
+    if (!checkPermission() ) {
+        requestPermission()
+        deactivateLoading()
         return
     }
 
@@ -209,7 +217,6 @@ private fun getLocation() {
                 } else {
                     val location: Address = addresses[0]
                     val showCity = findViewById<TextView>(R.id.showCity)
-                    Log.d("city", location.getAddressLine(0))
                     showCity.text = location.getAddressLine(0)
                 }
             }
@@ -223,36 +230,46 @@ private fun getLocation() {
     }
     @SuppressLint("SetTextI18n")
     private fun printWeatherData(jsonRes: JSONObject) {
-        val calendar = Calendar.getInstance()
-        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val hour = getCurHour()
         val imageView = findViewById<ImageView>(R.id.myImageView)
         val currentTempView = findViewById<TextView>(R.id.currentTemp)
         val maxTempView = findViewById<TextView>(R.id.maxTemp)
         val minTempView = findViewById<TextView>(R.id.minTemp)
         val windSpeedView= findViewById<TextView>(R.id.wind)
         val humidityView= findViewById<TextView>(R.id.humidity)
-        val curHumidity = jsonRes.getJSONObject("hourly").getJSONArray("relativehumidity_2m").getInt(hour)
-        val curWindSpeed = jsonRes.getJSONObject("hourly").getJSONArray("windspeed_10m").getDouble(hour)
-        val currentTemp = jsonRes.getJSONObject("hourly").getJSONArray("temperature_2m").getDouble(hour)
-        val maxTemp = jsonRes.getJSONObject("daily").getJSONArray("temperature_2m_max").getDouble(0)
-        val minTemp = jsonRes.getJSONObject("daily").getJSONArray("temperature_2m_min").getDouble(0)
-        val windDegree=jsonRes.getJSONObject("hourly").getJSONArray("winddirection_10m").getInt(hour)
+
+        val curHumidity = getDataDouble(jsonRes,"hourly","relativehumidity_2m",hour).toInt()
+        val windDegree= getDataDouble(jsonRes,"hourly","winddirection_10m",hour).toInt()
+        val weatherCode: Int = getDataDouble(jsonRes,"hourly","weathercode",0).toInt()
+        val curWindSpeed = getDataDouble(jsonRes,"hourly","windspeed_10m",hour)
+        val currentTemp = getDataDouble(jsonRes,"hourly","temperature_2m",hour)
+        val maxTemp = getDataDouble(jsonRes,"daily","temperature_2m_max",0)
+        val minTemp = getDataDouble(jsonRes,"daily","temperature_2m_min",0)
+
         val windDirection= degreeToDirection(windDegree)
         currentTempView.text= "$currentTemp C"
         maxTempView.text = "$maxTemp C"
         minTempView.text = "$minTemp C"
         windSpeedView.text="$curWindSpeed km/h $windDirection"
         humidityView.text="$curHumidity %"
-        val weatherCode: Int = jsonRes.getJSONObject("hourly").getJSONArray("weathercode").getInt(0)
         getCityFromCoordinates(jsonRes.getString("latitude").toDouble(), jsonRes.getString("longitude").toDouble())
         weatherCodeToPicture[weatherCode]?.let { imageView.setImageResource(it) }
         deactivateLoading()
-        val showExtras= findViewById<LinearLayout>(R.id.showExtra)
+        setVisibilityForData()
+    }
+    private fun getCurHour(): Int {
+        val calendar = Calendar.getInstance()
+        return calendar.get(Calendar.HOUR_OF_DAY)
+    }
+    private fun getDataDouble(jsonRes: JSONObject,jsonKey:String, key: String, hour: Int): Double {
+        return jsonRes.getJSONObject(jsonKey).getJSONArray(key).getDouble(hour)
+    }
+    private fun setVisibilityForData() {
+        val showExtras = findViewById<LinearLayout>(R.id.showExtra)
         val showTempLayout = findViewById<LinearLayout>(R.id.showTemp)
-        showTempLayout.visibility = View.VISIBLE
+        showTempLayout.visibility =  View.VISIBLE
         showExtras.visibility = View.VISIBLE
     }
-
     private fun getLocationFromName(locName:String){
         val geocoder = Geocoder(this)
         val geocodeListener = Geocoder.GeocodeListener { addresses ->

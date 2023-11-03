@@ -1,7 +1,6 @@
 package ch.ost.weatherapp.data
 
 import android.content.Context
-import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
@@ -19,10 +18,6 @@ class MyWeatherStore(context: Context)  {
             preferences[jsonKey] = jsonObject
             preferences[timeKey] = System.currentTimeMillis()
         }
-        val storedJsonObject = dataStore.data.first()[jsonKey]
-        val storedTimestamp = dataStore.data.first()[timeKey]
-        Log.d("storageData", "Saved JSON object: $storedJsonObject, Timestamp: $storedTimestamp")
-
     }
 
     suspend fun getJsonObjectWithTimestamp(): Pair<String?, Long?> {
