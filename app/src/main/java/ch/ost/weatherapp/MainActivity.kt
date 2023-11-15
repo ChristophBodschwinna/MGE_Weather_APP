@@ -143,6 +143,7 @@ class MainActivity : AppCompatActivity() {
             {
                 val noResponse= getString(R.string.no_response_meteo)
                 Toast.makeText(this, noResponse, Toast.LENGTH_SHORT).show()
+                deactivateLoading()
             })
         queue.add(stringRequest)
     }
