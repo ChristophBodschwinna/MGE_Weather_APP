@@ -186,26 +186,26 @@ class MainActivity : AppCompatActivity() {
         }
         return true
     }
-private fun getLocation() {
-    if (!checkPermission() ) {
-        requestPermission()
-        deactivateLoading()
-        return
-    }
-
-    fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, object : CancellationToken() {
-        override fun onCanceledRequested(p0: OnTokenCanceledListener) = CancellationTokenSource().token
-        override fun isCancellationRequested() = false
-    })
-        .addOnSuccessListener { location: Location? ->
-            if (location == null) {
-                val noLocation = getString(R.string.no_location)
-                Toast.makeText(this, noLocation, Toast.LENGTH_SHORT).show()
-            } else {
-                getWeatherData(location.latitude, location.longitude)
-            }
+    private fun getLocation() {
+        if (!checkPermission() ) {
+            requestPermission()
+            deactivateLoading()
+            return
         }
-}
+
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, object : CancellationToken() {
+            override fun onCanceledRequested(p0: OnTokenCanceledListener) = CancellationTokenSource().token
+            override fun isCancellationRequested() = false
+        })
+            .addOnSuccessListener { location: Location? ->
+                if (location == null) {
+                    val noLocation = getString(R.string.no_location)
+                    Toast.makeText(this, noLocation, Toast.LENGTH_SHORT).show()
+                } else {
+                    getWeatherData(location.latitude, location.longitude)
+                }
+            }
+    }
     private fun getCityFromCoordinates(lat: Double, lon: Double){
         val geocoder = Geocoder(this)
         val geocodeListener = Geocoder.GeocodeListener { addresses ->
@@ -284,7 +284,6 @@ private fun getLocation() {
         }
         geocoder.getFromLocationName(locName,5,geocodeListener)
     }
-
     private fun showLanguageSelectionDialog() {
         val changeLangText= getString(R.string.change_language)
         val dialogView = layoutInflater.inflate(R.layout.dialog_language_selection, null)
@@ -294,16 +293,27 @@ private fun getLocation() {
             .create()
 
         dialogView.findViewById<Button>(R.id.btnGerman).setOnClickListener {
-            setLocale("de")
-            recreate()
+            if(!checkLanguage("de")){
+                setLocale("de")
+                recreate()
+            }
             dialog.dismiss()
         }
         dialogView.findViewById<Button>(R.id.btnEnglish).setOnClickListener {
-            setLocale("en")
-            recreate()
+           if(!checkLanguage("en")){
+               setLocale("en")
+               recreate()
+           }
             dialog.dismiss()
         }
         dialog.show()
+    }
+    private fun checkLanguage(lang:String):Boolean{
+        val curLang = resources.configuration.locales.get(0)
+        if (curLang.toString()==lang){
+            return true
+        }
+        return false
     }
     private fun setLocale(languageCode: String) {
         val locale = Locale(languageCode)
