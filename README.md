@@ -9,7 +9,7 @@ Es wird das jetzige Wetter vom aktuellen Standort oder von einer eingegebenen St
    - Wetter über Eingaben
 3. Persistenz / Offlinefähigkeit                       1 Punkt 
 4. Verwendung von Webservices                          1 Punkt
-   -API zu [Open-Meteo](https://open-meteo.com/en/docs) verwendet
+   - API zu [Open-Meteo](https://open-meteo.com/en/docs) verwendet
 5. Verwendung von Aktoren oder Sensoren (pro Typ)      1 Punkt
    - GPS
 6. Ressourcen: Lokalisierung                           2 Punkte
@@ -20,6 +20,8 @@ Es wird das jetzige Wetter vom aktuellen Standort oder von einer eingegebenen St
 ![App in Englisch](/Screenshot/englisch.png)
 ![App in Deutsch](/Screenshot/deutsch.png)
 ![App mit Stadortbestimmung](/Screenshot/standort.png)
+![App sprache ändern](/Screenshot/change_language.png)
 
-## [Quelle Wetter Bilder](/app/src/main/res/drawable)
+
+## [Quelle Wetter Bilder/Icon](/app/src/main/res/drawable)
 Designed by Titusurya / Freepik [Website](https://www.freepik.com/free-vector/coloured-weather-icons-collection_895655.htm)
